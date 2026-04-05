@@ -64,7 +64,8 @@ class AdminOrderDetailViewModel(
 @Composable
 fun AdminOrderDetailScreen(
     viewModel: AdminOrderDetailViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onPrintLabelClick: (Int) -> Unit
 ) {
     val orderDetail by viewModel.orderDetail.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -139,7 +140,7 @@ fun AdminOrderDetailScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         LoomCraftButton(
                             text = "Generate Shipping Label",
-                            onClick = { /* Task 005 */ },
+                            onClick = { onPrintLabelClick(order.id) },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

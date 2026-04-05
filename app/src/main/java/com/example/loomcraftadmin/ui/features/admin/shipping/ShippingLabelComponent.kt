@@ -1,0 +1,170 @@
+package com.example.loomcraftadmin.ui.features.admin.shipping
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.loomcraftadmin.data.model.OrderDetail
+import com.example.loomcraftadmin.data.model.OrderItem
+import com.example.loomcraftadmin.ui.theme.LoomCraftAdminTheme
+
+@Composable
+fun ShippingLabel(
+    order: OrderDetail,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .width(400.dp)
+            .wrapContentHeight(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(2.dp, Color.Black)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
+        ) {
+            // Header: Logo & Order ID
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "LOOMCRAFT",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp,
+                        color = Color.Black
+                    )
+                )
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "ORDER ID",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "#${order.id}",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.Black
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(thickness = 1.dp, color = Color.Black)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Ship To Section
+            Text(
+                text = "SHIP TO:",
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = order.customerName ?: "N/A",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.Black
+            )
+            Text(
+                text = order.customerAddress ?: "No Address Provided",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Black,
+                lineHeight = 24.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Contact: ${order.customerPhone ?: "N/A"}",
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+            HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Items Summary
+            Text(
+                text = "CONTENTS:",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.Gray
+            )
+            order.items.forEach { item ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "${item.quantity}x ${item.productName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Footer / Barcode Placeholder
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .background(Color.Black.copy(alpha = 0.05f))
+                    .drawBehind {
+                        // Simple barcode-like pattern
+                        val barWidth = 4.dp.toPx()
+                        val spacing = 2.dp.toPx()
+                        var x = 0f
+                        while (x < size.width) {
+                            val w = if ((x / (barWidth + spacing)).toInt() % 3 == 0) barWidth * 2 else barWidth
+                            drawRect(
+                                color = Color.Black,
+                                topLeft = Offset(x, 0f),
+                                size = androidx.compose.ui.geometry.Size(w, size.height)
+                            )
+                            x += w + spacing
+                        }
+                    }
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ShippingLabelPreview() {
+    LoomCraftAdminTheme {
+        Box(modifier = Modifier.padding(20.dp)) {
+            ShippingLabel(
+                order = OrderDetail(
+                    id = 104,
+                    status = "Accepted",
+                    items = listOf(
+                        OrderItem(1, "Silk Scarf", 1, 450.0, "Accepted"),
+                        OrderItem(2, "Handloom Saree", 1, 1200.0, "Accepted")
+                    ),
+                    customerName = "Priya Kapoor",
+                    customerAddress = "123, Heritage Lane, Jaipur, Rajasthan - 302001",
+                    customerPhone = "+91 98765 43210",
+                    total = 1650.0,
+                    createdAt = "2026-04-02"
+                )
+            )
+        }
+    }
+}

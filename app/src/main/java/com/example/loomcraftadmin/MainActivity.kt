@@ -12,6 +12,8 @@ import androidx.navigation.navArgument
 import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderDetailScreen
 import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderDetailViewModel
 import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderListScreen
+import com.example.loomcraftadmin.ui.features.admin.shipping.PrintPreviewScreen
+import com.example.loomcraftadmin.ui.features.admin.shipping.PrintPreviewViewModel
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderDetailScreen
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderDetailViewModel
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderListScreen
@@ -65,6 +67,20 @@ fun AppNavigation() {
             val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
             val viewModel = AdminOrderDetailViewModel(orderId)
             AdminOrderDetailScreen(
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onPrintLabelClick = { id ->
+                    navController.navigate("admin_print_preview/$id")
+                }
+            )
+        }
+        composable(
+            route = "admin_print_preview/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
+            val viewModel = PrintPreviewViewModel(orderId)
+            PrintPreviewScreen(
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() }
             )
