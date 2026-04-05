@@ -6,57 +6,69 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.loomcraftadmin.data.model.OrderDetail
 import com.example.loomcraftadmin.data.model.OrderItem
 import com.example.loomcraftadmin.ui.components.LoomCraftButton
 import com.example.loomcraftadmin.ui.components.LoomCraftCard
 import com.example.loomcraftadmin.ui.components.StatusTag
-import com.example.loomcraftadmin.ui.theme.LoomCraftAdminTheme
+import com.example.loomcraftadmin.ui.features.orders.viewmodel.OrderViewModel
+import com.example.loomcraftadmin.utils.CurrencyFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VendorOrderDetailScreen(
-    viewModel: VendorOrderDetailViewModel,
-    onBackClick: () -> Unit
+    orderId: Int,
+    onBackClick: () -> Unit,
+    viewModel: OrderViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val orderDetail by viewModel.orderDetail.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LoomCraftAdminTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Order Details") },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
+    LaunchedEffect(orderId) {
+        viewModel.loadVendorOrderDetail(orderId)
+    }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Order Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                )
-            }
-        ) { padding ->
-            Box(modifier = Modifier.padding(padding)) {
-                when (state) {
-                    is VendorOrderDetailState.Loading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
-                    }
-                    is VendorOrderDetailState.Success -> {
-                        OrderDetailContent(
-                            (state as VendorOrderDetailState.Success).orderDetail,
-                            onUpdateStatus = viewModel::updateStatus
-                        )
-                    }
-                    is VendorOrderDetailState.Error -> {
-                        Text((state as VendorOrderDetailState.Error).message)
-                    }
+                }
+            )
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                orderDetail?.let { detail ->
+                    OrderDetailContent(
+                        detail,
+                        onUpdateStatus = { status -> viewModel.updateStatus(orderId, status) }
+                    )
+                } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Order not found")
                 }
             }
         }
@@ -145,12 +157,12 @@ fun OrderItemCard(item: OrderItem) {
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
-                    "Qty: ${item.quantity} × ₹${item.unitPrice}",
+                    "Qty: ${item.quantity} × ${CurrencyFormatter.format(item.unitPrice, item.currency)}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
             Text(
-                "₹${item.quantity * item.unitPrice}",
+                CurrencyFormatter.format(item.quantity * item.unitPrice, item.currency),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary

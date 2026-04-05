@@ -8,58 +8,43 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.loomcraftadmin.data.model.Order
-import com.example.loomcraftadmin.data.repository.OrderRepository
 import com.example.loomcraftadmin.ui.components.LoomCraftCard
 import com.example.loomcraftadmin.ui.components.StatusTag
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
-class AdminOrderViewModel(private val repository: OrderRepository = OrderRepository()) : ViewModel() {
-    private val _orders = MutableStateFlow<List<Order>>(emptyList())
-    val orders: StateFlow<List<Order>> = _orders.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    init {
-        loadOrders()
-    }
-
-    private fun loadOrders() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            repository.getAdminOrders().collect {
-                _orders.value = it
-                _isLoading.value = false
-            }
-        }
-    }
-}
+import com.example.loomcraftadmin.ui.features.orders.viewmodel.OrderViewModel
+import com.example.loomcraftadmin.utils.CurrencyFormatter
+import com.example.loomcraftadmin.utils.DataMaskingUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminOrderListScreen(
     onOrderClick: (Int) -> Unit,
-    viewModel: AdminOrderViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: OrderViewModel = hiltViewModel()
 ) {
-    val orders by viewModel.orders.collectAsState()
+    val orders by viewModel.adminOrders.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadAdminOrders()
+    }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -133,7 +118,7 @@ fun AdminOrderCard(order: Order, onClick: () -> Unit) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = order.customerName ?: "Unknown Customer",
+                text = DataMaskingUtils.maskName(order.customerName),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
             )
@@ -149,7 +134,7 @@ fun AdminOrderCard(order: Order, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "₹${order.total}",
+                    text = CurrencyFormatter.format(order.total, order.currency),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.ExtraBold

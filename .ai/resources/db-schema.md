@@ -28,6 +28,7 @@ Omitted framework/runtime tables:
 - `jobs`
 - `migrations`
 - `password_reset_tokens`
+- `personal_access_tokens`
 - `sessions`
 
 Cashier tables included because they are part of the application's billing model:
@@ -544,6 +545,45 @@ Indexes:
 
 ---
 
+### personal_access_tokens
+
+Laravel Sanctum tokens for API authentication.
+
+- `id` (bigint unsigned, PK)
+- `tokenable_type` (varchar(255))
+- `tokenable_id` (bigint unsigned)
+- `name` (text)
+- `token` (varchar(64), unique)
+- `abilities` (text, nullable)
+- `last_used_at` (timestamp, nullable)
+- `expires_at` (timestamp, nullable)
+- `created_at` (timestamp, nullable)
+- `updated_at` (timestamp, nullable)
+
+Indexes:
+- `personal_access_tokens_token_unique` on `token`
+- `personal_access_tokens_expires_at_index` on `expires_at`
+- `personal_access_tokens_tokenable_type_tokenable_id_index` on (`tokenable_type`, `tokenable_id`)
+
+---
+
+### mobile_notification_tokens
+
+FCM tokens for push notifications.
+
+- `id` (bigint unsigned, PK)
+- `user_id` (bigint unsigned, FK -> users.id)
+- `fcm_token` (varchar(512), unique)
+- `platform` (varchar(32), default `android`)
+- `last_used_at` (timestamp, nullable)
+- `created_at` (timestamp, nullable)
+- `updated_at` (timestamp, nullable)
+
+Indexes:
+- `mobile_notification_tokens_fcm_token_unique` on `fcm_token`
+
+---
+
 ### subscriptions
 
 Laravel Cashier subscriptions.
@@ -606,6 +646,8 @@ Indexes:
 - `orders` 1-* `disputes`
 - `users` 1-* `subscriptions`
 - `subscriptions` 1-* `subscription_items`
+- `users` 1-* `mobile_notification_tokens`
+- `users` 1-* `personal_access_tokens`
 
 ---
 

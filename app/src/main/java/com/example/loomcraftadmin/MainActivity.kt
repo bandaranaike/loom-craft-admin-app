@@ -1,40 +1,81 @@
 package com.example.loomcraftadmin
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.loomcraftadmin.data.local.TokenManager
 import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderDetailScreen
-import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderDetailViewModel
 import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderListScreen
 import com.example.loomcraftadmin.ui.features.admin.shipping.PrintPreviewScreen
-import com.example.loomcraftadmin.ui.features.admin.shipping.PrintPreviewViewModel
+import com.example.loomcraftadmin.ui.features.auth.LoginScreen
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderDetailScreen
-import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderDetailViewModel
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderListScreen
 import com.example.loomcraftadmin.ui.theme.LoomCraftAdminTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var tokenManager: TokenManager
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        // Handle permission result if needed
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        askNotificationPermission()
         setContent {
             LoomCraftAdminTheme {
-                AppNavigation()
+                AppNavigation(tokenManager)
+            }
+        }
+    }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(tokenManager: TokenManager) {
     val navController = rememberNavController()
+    val userRole by tokenManager.userRole.collectAsState(initial = null)
 
-    NavHost(navController = navController, startDestination = "admin_order_list") {
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    val destination = if (userRole == "vendor") "vendor_order_list" else "admin_order_list"
+                    navController.navigate(destination) {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
         composable("vendor_order_list") {
             VendorOrderListScreen(
                 onOrderClick = { orderId ->
@@ -47,9 +88,8 @@ fun AppNavigation() {
             arguments = listOf(navArgument("orderId") { type = NavType.IntType })
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
-            val viewModel = VendorOrderDetailViewModel(orderId)
             VendorOrderDetailScreen(
-                viewModel = viewModel,
+                orderId = orderId,
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -65,9 +105,8 @@ fun AppNavigation() {
             arguments = listOf(navArgument("orderId") { type = NavType.IntType })
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
-            val viewModel = AdminOrderDetailViewModel(orderId)
             AdminOrderDetailScreen(
-                viewModel = viewModel,
+                orderId = orderId,
                 onBackClick = { navController.popBackStack() },
                 onPrintLabelClick = { id ->
                     navController.navigate("admin_print_preview/$id")
@@ -79,9 +118,8 @@ fun AppNavigation() {
             arguments = listOf(navArgument("orderId") { type = NavType.IntType })
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
-            val viewModel = PrintPreviewViewModel(orderId)
             PrintPreviewScreen(
-                viewModel = viewModel,
+                orderId = orderId,
                 onBackClick = { navController.popBackStack() }
             )
         }

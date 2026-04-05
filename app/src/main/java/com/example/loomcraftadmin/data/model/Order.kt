@@ -7,9 +7,10 @@ data class Order(
     val status: String,
     val itemsCount: Int,
     val createdAt: String,
-    val vendorItemsTotal: Double? = null, // Only for Vendor
-    val customerName: String? = null,     // Only for Admin
-    val total: Double? = null             // Only for Admin
+    val vendorItemsTotal: Double? = null,
+    val customerName: String? = null,
+    val total: Double? = null,
+    val currency: String = "INR"
 )
 
 data class OrderItem(
@@ -17,7 +18,8 @@ data class OrderItem(
     val productName: String,
     val quantity: Int,
     val unitPrice: Double,
-    val status: String
+    val status: String,
+    val currency: String = "INR"
 )
 
 data class OrderDetail(
@@ -28,5 +30,6 @@ data class OrderDetail(
     val customerAddress: String? = null,
     val customerPhone: String? = null,
     val total: Double? = null,
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val currency: String = "INR"
 )
