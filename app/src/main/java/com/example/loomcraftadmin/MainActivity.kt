@@ -9,6 +9,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderDetailScreen
+import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderDetailViewModel
+import com.example.loomcraftadmin.ui.features.admin.orders.AdminOrderListScreen
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderDetailScreen
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderDetailViewModel
 import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderListScreen
@@ -29,7 +32,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "vendor_order_list") {
+    NavHost(navController = navController, startDestination = "admin_order_list") {
         composable("vendor_order_list") {
             VendorOrderListScreen(
                 onOrderClick = { orderId ->
@@ -44,6 +47,24 @@ fun AppNavigation() {
             val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
             val viewModel = VendorOrderDetailViewModel(orderId)
             VendorOrderDetailScreen(
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable("admin_order_list") {
+            AdminOrderListScreen(
+                onOrderClick = { orderId ->
+                    navController.navigate("admin_order_detail/$orderId")
+                }
+            )
+        }
+        composable(
+            route = "admin_order_detail/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
+            val viewModel = AdminOrderDetailViewModel(orderId)
+            AdminOrderDetailScreen(
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() }
             )

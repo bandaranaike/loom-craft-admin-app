@@ -23,5 +23,10 @@ data class OrderItem(
 data class OrderDetail(
     val id: Int,
     val status: String,
-    val items: List<OrderItem>
+    val items: List<OrderItem>,
+    val customerName: String? = null,
+    val customerAddress: String? = null,
+    val customerPhone: String? = null,
+    val total: Double? = null,
+    val createdAt: String? = null
 )

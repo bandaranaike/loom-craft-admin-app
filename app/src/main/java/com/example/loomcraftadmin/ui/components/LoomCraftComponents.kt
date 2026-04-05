@@ -97,6 +97,8 @@ fun StatusTag(
         "rejected" -> MaterialTheme.colorScheme.errorContainer
         "hand over to admin" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
         "shipped" -> Color(0xFFE8F5E9)
+        "delivered" -> Color(0xFFC8E6C9)
+        "cancelled" -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
 
@@ -106,6 +108,8 @@ fun StatusTag(
         "rejected" -> MaterialTheme.colorScheme.error
         "hand over to admin" -> MaterialTheme.colorScheme.tertiary
         "shipped" -> Color(0xFF2E7D32)
+        "delivered" -> Color(0xFF1B5E20)
+        "cancelled" -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
