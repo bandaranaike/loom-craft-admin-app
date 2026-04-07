@@ -1,7 +1,7 @@
 # Task: Authentication Integration with Laravel API
 
 ## Status
-- Status: Planned
+- Status: Completed
 - Priority: High
 - Assigned to: Mobile Developer
 
@@ -9,22 +9,23 @@
 Implement the login flow and secure the application using Laravel Sanctum as specified in the API documentation.
 
 ## Requirements
-- [ ] **Data Layer**:
+- [x] **Data Layer**:
     - Add Retrofit or Ktor-client for API communication.
     - Create `AuthApiService` with a `POST /login` endpoint.
     - Implement an `AuthRepository` to handle login and token storage.
-- [ ] **Secure Storage**:
+- [x] **Secure Storage**:
     - Use `EncryptedSharedPreferences` or `DataStore` to store the Sanctum Bearer token securely.
-- [ ] **UI Implementation**:
+- [x] **UI Implementation**:
     - Create a `LoginScreen` following the "LoomCraft Warm" design system.
     - Handle loading, error (invalid credentials), and success states.
-- [ ] **Auth Interceptor**:
+- [x] **Auth Interceptor**:
     - Add an `OkHttp` Interceptor to automatically attach the `Authorization: Bearer <token>` header to all outgoing requests.
-- [ ] **Session Management**:
+- [x] **Session Management**:
     - Redirect to `LoginScreen` if the token is missing or expired.
     - Implement a "Logout" functionality.
+    - Persist remembered sessions and auto-load the dashboard on relaunch when remember-me is enabled.
 
 ## Deliverables
-- [ ] Working Login Screen.
-- [ ] Secure token storage implementation.
-- [ ] Authenticated API client.
+- [x] Working Login Screen.
+- [x] Secure token storage implementation.
+- [x] Authenticated API client.

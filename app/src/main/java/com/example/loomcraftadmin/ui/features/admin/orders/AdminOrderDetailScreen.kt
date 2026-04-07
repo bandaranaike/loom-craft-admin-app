@@ -1,13 +1,40 @@
 package com.example.loomcraftadmin.ui.features.admin.orders
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -20,7 +47,6 @@ import com.example.loomcraftadmin.ui.components.LoomCraftCard
 import com.example.loomcraftadmin.ui.components.StatusTag
 import com.example.loomcraftadmin.ui.features.orders.viewmodel.OrderViewModel
 import com.example.loomcraftadmin.utils.CurrencyFormatter
-import com.example.loomcraftadmin.utils.DataMaskingUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +92,14 @@ fun AdminOrderDetailScreen(
                             expanded = showStatusMenu,
                             onDismissRequest = { showStatusMenu = false }
                         ) {
-                            val statuses = listOf("Pending", "Processing", "Accepted", "Shipped", "Delivered", "Cancelled")
+                            val statuses = listOf(
+                                "Pending",
+                                "Processing",
+                                "Accepted",
+                                "Shipped",
+                                "Delivered",
+                                "Cancelled"
+                            )
                             statuses.forEach { status ->
                                 DropdownMenuItem(
                                     text = { Text(status) },
@@ -98,8 +131,10 @@ fun AdminOrderDetailScreen(
                     item {
                         AdminOrderDetailHeader(order)
                     }
-                    item {
-                        CustomerInfoSection(order)
+                    if (order.displayCustomerAddress() != null || order.displayCustomerPhone() != null) {
+                        item {
+                            ShippingAddressSection(order)
+                        }
                     }
                     item {
                         Text(
@@ -122,6 +157,17 @@ fun AdminOrderDetailScreen(
                         )
                     }
                 }
+            } ?: Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Order details unavailable",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -143,38 +189,9 @@ fun AdminOrderDetailHeader(order: OrderDetail) {
                 StatusTag(status = order.status)
             }
             Text(
-                text = "Placed on ${order.createdAt}",
+                text = "Placed on ${order.createdAt ?: "N/A"}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-fun CustomerInfoSection(order: OrderDetail) {
-    LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Column {
-            Text(
-                text = "Customer Information",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = DataMaskingUtils.maskName(order.customerName),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = DataMaskingUtils.maskAddress(order.customerAddress),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Phone: ${DataMaskingUtils.maskPhone(order.customerPhone)}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -194,7 +211,7 @@ fun AdminOrderItemRow(item: OrderItem) {
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
                 )
                 Text(
-                    text = "Qty: ${item.quantity} • ${CurrencyFormatter.format(item.unitPrice, item.currency)}",
+                    text = "Qty: ${item.quantity} | ${CurrencyFormatter.format(item.unitPrice, item.currency)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -208,6 +225,41 @@ fun AdminOrderItemRow(item: OrderItem) {
 }
 
 @Composable
+fun ShippingAddressSection(order: OrderDetail) {
+    LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(
+                text = "Shipping Details",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            order.displayCustomerName()?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            order.displayCustomerAddress()?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            order.displayCustomerPhone()?.let {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Contact: $it",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun SummarySection(order: OrderDetail) {
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
         Column {
@@ -216,7 +268,10 @@ fun SummarySection(order: OrderDetail) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Subtotal", style = MaterialTheme.typography.bodyMedium)
-                Text(CurrencyFormatter.format(order.total, order.currency), style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    CurrencyFormatter.format(order.total, order.currency),
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             Row(

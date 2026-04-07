@@ -3,6 +3,8 @@ package com.example.loomcraftadmin.ui.features.vendor.orders
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +22,7 @@ import com.example.loomcraftadmin.utils.CurrencyFormatter
 @Composable
 fun VendorOrderListScreen(
     onOrderClick: (Int) -> Unit,
+    onLogout: () -> Unit,
     viewModel: OrderViewModel = hiltViewModel()
 ) {
     val orders by viewModel.vendorOrders.collectAsState()
@@ -47,6 +50,11 @@ fun VendorOrderListScreen(
                         "My Orders",
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                     )
+                },
+                actions = {
+                    IconButton(onClick = onLogout) {
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout")
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,

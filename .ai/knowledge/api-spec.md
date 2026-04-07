@@ -18,7 +18,8 @@ This document provides instructions for the Backend AI Agent to implement the AP
   ```json
   {
     "email": "user@example.com",
-    "password": "password"
+    "password": "password",
+    "device_name": "android"
   }
   ```
 - **Response (200 OK)**:
@@ -49,7 +50,8 @@ This document provides instructions for the Backend AI Agent to implement the AP
   [
     {
       "id": 101,
-      "status": "pending",
+      "public_id": "ORD-EXAMPLE123",
+      "status": "paid",
       "total": 1500.00,
       "customer_name": "Jane Smith",
       "items_count": 3,
@@ -109,9 +111,9 @@ This document provides instructions for the Backend AI Agent to implement the AP
   }
   ```
 - **Allowed Statuses (Vendor)**:
-    - `accepted`, `rejected`, `processing`, `hand_over_to_admin`.
+    - `shipped` only, and only when the current order status is `paid` or `confirmed`.
 - **Allowed Statuses (Admin)**:
-    - All database enums (e.g., `shipped`, `delivered`, `disputed`, `cancelled`).
+    - `pending`, `paid`, `confirmed`, `shipped`, `delivered`, `cancelled`.
 - **Logic**: 
     - Validate that the user has permission to move the order to the requested state.
     - Trigger an internal event to notify relevant parties (Admin/Customer).
@@ -142,3 +144,4 @@ This document provides instructions for the Backend AI Agent to implement the AP
 3. Implement **Policies** to handle Vendor vs Admin authorization logic.
 4. Use **Sanctum** for token-based auth.
 5. Ensure the database matches `.ai/resources/db-schema.md`.
+6. Treat `.ai/resources/loom-craft-public-api.postman_collection.json` as the most up-to-date mobile API contract when there is a conflict with older notes.

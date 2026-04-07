@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.loomcraftadmin.data.model.OrderAddress
 import com.example.loomcraftadmin.data.model.OrderDetail
 import com.example.loomcraftadmin.data.model.OrderItem
 import com.example.loomcraftadmin.ui.theme.LoomCraftAdminTheme
@@ -77,19 +78,19 @@ fun ShippingLabel(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = order.customerName ?: "N/A",
+                text = order.displayCustomerName() ?: "N/A",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = Color.Black
             )
             Text(
-                text = order.customerAddress ?: "No Address Provided",
+                text = order.displayCustomerAddress() ?: "No Address Provided",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Black,
                 lineHeight = 24.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Contact: ${order.customerPhone ?: "N/A"}",
+                text = "Contact: ${order.displayCustomerPhone() ?: "N/A"}",
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 color = Color.Black
             )
@@ -158,9 +159,19 @@ fun ShippingLabelPreview() {
                         OrderItem(1, "Silk Scarf", 1, 450.0, "Accepted"),
                         OrderItem(2, "Handloom Saree", 1, 1200.0, "Accepted")
                     ),
-                    customerName = "Priya Kapoor",
-                    customerAddress = "123, Heritage Lane, Jaipur, Rajasthan - 302001",
-                    customerPhone = "+91 98765 43210",
+                    addresses = listOf(
+                        OrderAddress(
+                            id = 1,
+                            type = "shipping",
+                            fullName = "Priya Kapoor",
+                            line1 = "123, Heritage Lane",
+                            city = "Jaipur",
+                            region = "Rajasthan",
+                            postalCode = "302001",
+                            countryCode = "IN",
+                            phone = "+91 98765 43210"
+                        )
+                    ),
                     total = 1650.0,
                     createdAt = "2026-04-02"
                 )

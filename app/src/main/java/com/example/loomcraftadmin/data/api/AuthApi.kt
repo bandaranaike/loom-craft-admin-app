@@ -6,7 +6,8 @@ import retrofit2.http.POST
 
 data class LoginRequest(
     val email: String,
-    val password: String
+    val password: String,
+    @Json(name = "device_name") val deviceName: String = "android"
 )
 
 data class LoginResponse(
@@ -25,7 +26,7 @@ interface AuthApi {
     @POST("login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
-    @POST("mobile_notification_tokens")
+    @POST("notifications/register")
     suspend fun registerFcmToken(@Body request: FcmTokenRequest): retrofit2.Response<Unit>
 }
 

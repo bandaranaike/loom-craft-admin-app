@@ -8,16 +8,16 @@ import retrofit2.http.PATCH
 import retrofit2.http.Path
 
 interface OrderApi {
-    @GET("admin/orders")
+    @GET("orders")
     suspend fun getAdminOrders(): List<Order>
 
-    @GET("admin/orders/{id}")
+    @GET("orders/{id}")
     suspend fun getAdminOrderDetail(@Path("id") id: Int): OrderDetail
 
-    @GET("vendor/orders")
+    @GET("orders")
     suspend fun getVendorOrders(): List<Order>
 
-    @GET("vendor/orders/{id}")
+    @GET("orders/{id}")
     suspend fun getVendorOrderDetail(@Path("id") id: Int): OrderDetail
 
     @PATCH("orders/{id}/status")

@@ -7,13 +7,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.loomcraftadmin.data.local.TokenManager
@@ -26,6 +34,7 @@ import com.example.loomcraftadmin.ui.features.vendor.orders.VendorOrderListScree
 import com.example.loomcraftadmin.ui.theme.LoomCraftAdminTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -36,7 +45,7 @@ class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { _ ->
-        // Handle permission result if needed
+        // Handle permission result if needed.
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +60,8 @@ class MainActivity : ComponentActivity() {
 
     private fun askNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            if (
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
                 PackageManager.PERMISSION_GRANTED
             ) {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -63,31 +73,61 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(tokenManager: TokenManager) {
     val navController = rememberNavController()
+    val authToken by tokenManager.authToken.collectAsState(initial = null)
     val userRole by tokenManager.userRole.collectAsState(initial = null)
+    val rememberMe by tokenManager.rememberMe.collectAsState(initial = true)
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    val coroutineScope = rememberCoroutineScope()
 
-    NavHost(navController = navController, startDestination = "login") {
+    LaunchedEffect(authToken, userRole, rememberMe) {
+        val destination = when {
+            authToken.isNullOrBlank() || userRole.isNullOrBlank() -> "login"
+            rememberMe && userRole == "vendor" -> "vendor_order_list"
+            rememberMe -> "admin_order_list"
+            else -> {
+                tokenManager.clearAuth()
+                "login"
+            }
+        }
+
+        if (currentRoute != destination) {
+            navController.navigate(destination) {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
+    NavHost(navController = navController, startDestination = "bootstrap") {
+        composable("bootstrap") {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
         composable("login") {
-            LoginScreen(
-                onLoginSuccess = {
-                    val destination = if (userRole == "vendor") "vendor_order_list" else "admin_order_list"
-                    navController.navigate(destination) {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }
-            )
+            LoginScreen(onLoginSuccess = { })
         }
         composable("vendor_order_list") {
             VendorOrderListScreen(
                 onOrderClick = { orderId ->
                     navController.navigate("vendor_order_detail/$orderId")
+                },
+                onLogout = {
+                    coroutineScope.launch {
+                        tokenManager.clearAuth()
+                    }
                 }
             )
         }
         composable(
             route = "vendor_order_detail/{orderId}",
             arguments = listOf(navArgument("orderId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
+        ) { backStackEntryForRoute ->
+            val orderId = backStackEntryForRoute.arguments?.getInt("orderId") ?: 0
             VendorOrderDetailScreen(
                 orderId = orderId,
                 onBackClick = { navController.popBackStack() }
@@ -97,14 +137,19 @@ fun AppNavigation(tokenManager: TokenManager) {
             AdminOrderListScreen(
                 onOrderClick = { orderId ->
                     navController.navigate("admin_order_detail/$orderId")
+                },
+                onLogout = {
+                    coroutineScope.launch {
+                        tokenManager.clearAuth()
+                    }
                 }
             )
         }
         composable(
             route = "admin_order_detail/{orderId}",
             arguments = listOf(navArgument("orderId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
+        ) { backStackEntryForRoute ->
+            val orderId = backStackEntryForRoute.arguments?.getInt("orderId") ?: 0
             AdminOrderDetailScreen(
                 orderId = orderId,
                 onBackClick = { navController.popBackStack() },
@@ -116,8 +161,8 @@ fun AppNavigation(tokenManager: TokenManager) {
         composable(
             route = "admin_print_preview/{orderId}",
             arguments = listOf(navArgument("orderId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
+        ) { backStackEntryForRoute ->
+            val orderId = backStackEntryForRoute.arguments?.getInt("orderId") ?: 0
             PrintPreviewScreen(
                 orderId = orderId,
                 onBackClick = { navController.popBackStack() }

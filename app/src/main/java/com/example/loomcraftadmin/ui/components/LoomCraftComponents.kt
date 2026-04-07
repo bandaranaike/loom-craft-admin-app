@@ -93,6 +93,7 @@ fun StatusTag(
 ) {
     val backgroundColor = when (status.lowercase()) {
         "pending" -> AccentSoft
+        "paid" -> MaterialTheme.colorScheme.primaryContainer
         "processing", "accepted" -> MaterialTheme.colorScheme.secondaryContainer
         "rejected" -> MaterialTheme.colorScheme.errorContainer
         "hand over to admin" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
@@ -104,6 +105,7 @@ fun StatusTag(
 
     val textColor = when (status.lowercase()) {
         "pending" -> BrandStrong
+        "paid" -> MaterialTheme.colorScheme.onPrimaryContainer
         "processing", "accepted" -> MaterialTheme.colorScheme.secondary
         "rejected" -> MaterialTheme.colorScheme.error
         "hand over to admin" -> MaterialTheme.colorScheme.tertiary

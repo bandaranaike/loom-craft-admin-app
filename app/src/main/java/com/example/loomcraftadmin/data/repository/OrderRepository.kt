@@ -10,36 +10,19 @@ import kotlinx.coroutines.flow.flow
 class OrderRepository(private val orderApi: OrderApi) {
 
     fun getAdminOrders(): Flow<List<Order>> = flow {
-        try {
-            emit(orderApi.getAdminOrders())
-        } catch (e: Exception) {
-            // Log error
-            emit(emptyList())
-        }
+        emit(orderApi.getAdminOrders())
     }
 
     fun getAdminOrderDetail(orderId: Int): Flow<OrderDetail?> = flow {
-        try {
-            emit(orderApi.getAdminOrderDetail(orderId))
-        } catch (e: Exception) {
-            emit(null)
-        }
+        emit(orderApi.getAdminOrderDetail(orderId))
     }
 
     fun getVendorOrders(): Flow<List<Order>> = flow {
-        try {
-            emit(orderApi.getVendorOrders())
-        } catch (e: Exception) {
-            emit(emptyList())
-        }
+        emit(orderApi.getVendorOrders())
     }
 
     fun getOrderDetail(orderId: Int): Flow<OrderDetail?> = flow {
-        try {
-            emit(orderApi.getVendorOrderDetail(orderId))
-        } catch (e: Exception) {
-            emit(null)
-        }
+        emit(orderApi.getVendorOrderDetail(orderId))
     }
 
     suspend fun updateOrderStatus(orderId: Int, status: String): Result<Unit> {

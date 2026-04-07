@@ -109,9 +109,10 @@ fun saveLabelAsPdf(context: Context, order: OrderDetail) {
     paint.textSize = 12f
     canvas.drawText("LOOMCRAFT SHIPPING LABEL", 20f, 40f, paint)
     canvas.drawText("Order ID: #${order.id}", 20f, 60f, paint)
-    canvas.drawText("Ship To: ${order.customerName}", 20f, 100f, paint)
-    canvas.drawText("Address: ${order.customerAddress?.take(30)}...", 20f, 120f, paint)
-    canvas.drawText("Contact: ${order.customerPhone}", 20f, 140f, paint)
+    canvas.drawText("Ship To: ${order.displayCustomerName() ?: "N/A"}", 20f, 100f, paint)
+    val addressLine = order.displayCustomerAddress()?.take(40) ?: "No Address Provided"
+    canvas.drawText("Address: $addressLine", 20f, 120f, paint)
+    canvas.drawText("Contact: ${order.displayCustomerPhone() ?: "N/A"}", 20f, 140f, paint)
 
     pdfDocument.finishPage(page)
 
