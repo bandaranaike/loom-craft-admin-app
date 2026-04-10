@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -32,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -40,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.loomcraftadmin.ui.components.LoomCraftButton
 import com.example.loomcraftadmin.ui.components.LoomCraftCard
+import com.example.loomcraftadmin.ui.components.LoomCraftLogo
+import com.example.loomcraftadmin.ui.components.OrderPageHeader
 import com.example.loomcraftadmin.ui.features.auth.viewmodel.LoginUiState
 import com.example.loomcraftadmin.ui.features.auth.viewmodel.LoginViewModel
 
@@ -88,26 +88,13 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "LC",
-                    style = MaterialTheme.typography.displayMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Black
-                )
-            }
+            OrderPageHeader(
+                eyebrow = "LoomCraft",
+                title = "Admin Portal"
+            )
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "LoomCraft Heritage",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                LoomCraftLogo(modifier = Modifier.padding(bottom = 8.dp))
                 Text(
                     "Admin & Vendor Portal",
                     style = MaterialTheme.typography.bodyLarge,

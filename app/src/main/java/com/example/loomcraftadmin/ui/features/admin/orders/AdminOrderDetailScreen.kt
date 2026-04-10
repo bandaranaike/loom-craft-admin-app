@@ -45,10 +45,16 @@ import com.example.loomcraftadmin.data.model.OrderDetail
 import com.example.loomcraftadmin.data.model.OrderItem
 import com.example.loomcraftadmin.ui.components.LoomCraftButton
 import com.example.loomcraftadmin.ui.components.LoomCraftCard
-import com.example.loomcraftadmin.ui.components.OrderItemThumbnail
-import com.example.loomcraftadmin.ui.components.StatusTag
+import com.example.loomcraftadmin.ui.components.OrderAmountPanel
+import com.example.loomcraftadmin.ui.components.OrderHeaderRow
+import com.example.loomcraftadmin.ui.components.OrderItemHeroImage
+import com.example.loomcraftadmin.ui.components.OrderInfoChip
+import com.example.loomcraftadmin.ui.components.OrderPageHeader
+import com.example.loomcraftadmin.ui.components.OrderSectionHeader
 import com.example.loomcraftadmin.ui.features.orders.viewmodel.OrderViewModel
 import com.example.loomcraftadmin.utils.CurrencyFormatter
+import com.example.loomcraftadmin.utils.OrderUiFormatter
+import com.example.loomcraftadmin.ui.components.orderStatusPalette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +85,12 @@ fun AdminOrderDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Order Details", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Order View",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -115,7 +126,8 @@ fun AdminOrderDetailScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -127,31 +139,35 @@ fun AdminOrderDetailScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
-                        AdminOrderDetailHeader(order)
-                    }
-                    if (order.displayCustomerAddress() != null || order.displayCustomerPhone() != null) {
-                        item {
-                            ShippingAddressSection(order)
-                        }
-                    }
-                    item {
-                        Text(
-                            "Order Items",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        OrderPageHeader(
+                            eyebrow = "Marketplace",
+                            title = "Order View"
                         )
                     }
+                    item { AdminOrderDetailHeader(order) }
+
+                    if (order.displayCustomerAddress() != null || order.displayCustomerPhone() != null) {
+                        item { ShippingAddressSection(order) }
+                    }
+
+                    item {
+                        OrderSectionHeader(
+                            eyebrow = "Fulfilment",
+                            title = "Order Items"
+                        )
+                    }
+
                     items(order.items) { item ->
                         AdminOrderItemRow(item)
                     }
+
+                    item { SummarySection(order) }
+
                     item {
-                        SummarySection(order)
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
                         LoomCraftButton(
                             text = "Generate Shipping Label",
                             onClick = { onPrintLabelClick(order.id) },
@@ -177,24 +193,40 @@ fun AdminOrderDetailScreen(
 
 @Composable
 fun AdminOrderDetailHeader(order: OrderDetail) {
+    val palette = orderStatusPalette(order.status)
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            OrderHeaderRow(
+                orderLabel = "Order #${order.id}",
+                status = order.status
+            )
+
+            order.displayCustomerName()?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
+
+            OrderAmountPanel(
+                label = "Grand total",
+                amount = CurrencyFormatter.format(order.total, order.currency),
+                amountColor = palette.amountColor
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "Order #${order.id}",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                OrderInfoChip(
+                    text = "${order.items.size} ${if (order.items.size == 1) "item" else "items"}",
+                    modifier = Modifier.weight(1f)
                 )
-                StatusTag(status = order.status)
+                OrderInfoChip(
+                    text = OrderUiFormatter.formatTimestamp(order.createdAt),
+                    modifier = Modifier.weight(1.5f)
+                )
             }
-            Text(
-                text = "Placed on ${order.createdAt ?: "N/A"}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
@@ -202,31 +234,40 @@ fun AdminOrderDetailHeader(order: OrderDetail) {
 @Composable
 fun AdminOrderItemRow(item: OrderItem) {
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OrderItemThumbnail(
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            OrderItemHeroImage(
                 imageUrl = item.displayImageUrl(),
                 contentDescription = item.productName
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+
+            Text(
+                text = item.productName,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = item.productName,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-                )
-                Text(
-                    text = "Qty: ${item.quantity} | ${CurrencyFormatter.format(item.unitPrice, item.currency)}",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = CurrencyFormatter.format(item.unitPrice, item.currency),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Text(
+                    text = CurrencyFormatter.format(item.quantity * item.unitPrice, item.currency),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                )
             }
-            Text(
-                text = CurrencyFormatter.format(item.quantity * item.unitPrice, item.currency),
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OrderInfoChip(text = "Qty ${item.quantity}")
+                OrderInfoChip(text = item.status.ifBlank { "Pending" })
+            }
         }
     }
 }
@@ -234,17 +275,15 @@ fun AdminOrderItemRow(item: OrderItem) {
 @Composable
 fun ShippingAddressSection(order: OrderDetail) {
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Column {
-            Text(
-                text = "Shipping Details",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            OrderSectionHeader(
+                eyebrow = "Dispatch",
+                title = "Shipping Details"
             )
-            Spacer(modifier = Modifier.height(8.dp))
             order.displayCustomerName()?.let {
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                 )
             }
             order.displayCustomerAddress()?.let {
@@ -255,12 +294,7 @@ fun ShippingAddressSection(order: OrderDetail) {
                 )
             }
             order.displayCustomerPhone()?.let {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Contact: $it",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                OrderInfoChip(text = "Contact $it")
             }
         }
     }
@@ -268,8 +302,13 @@ fun ShippingAddressSection(order: OrderDetail) {
 
 @Composable
 fun SummarySection(order: OrderDetail) {
+    val palette = orderStatusPalette(order.status)
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            OrderSectionHeader(
+                eyebrow = "Finance",
+                title = "Order Summary"
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -280,23 +319,12 @@ fun SummarySection(order: OrderDetail) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Grand Total",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    text = CurrencyFormatter.format(order.total, order.currency),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+            HorizontalDivider()
+            OrderAmountPanel(
+                label = "Grand total",
+                amount = CurrencyFormatter.format(order.total, order.currency),
+                amountColor = palette.amountColor
+            )
         }
     }
 }

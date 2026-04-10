@@ -20,7 +20,7 @@ private val DarkColorScheme = darkColorScheme(
     primary = BrandAccentDark,
     onPrimary = Color.White,
     primaryContainer = BrandStrongDark,
-    onPrimaryContainer = Color.White,
+    onPrimaryContainer = SurfaceBaseDark,
     secondary = BrandStrongDark,
     onSecondary = Color.White,
     secondaryContainer = SurfaceTintDark,
@@ -31,15 +31,18 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = BrandBodyTextDark,
     outline = BorderDefaultDark,
     outlineVariant = BorderSoftDark,
-    error = BrandDangerDark
+    error = BrandDangerDark,
+    background = SurfaceBaseDark,
+    onBackground = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = BrandStrong,
-    onPrimary = OnStrong,
-    primaryContainer = BrandStrongHover,
-    secondary = BrandAccent,
-    onSecondary = OnStrong,
+    primary = BrandAccent,
+    onPrimary = Color.White,
+    primaryContainer = SurfaceHeaderPeach,
+    onPrimaryContainer = BrandStrong,
+    secondary = BrandStrong,
+    onSecondary = Color.White,
     secondaryContainer = SurfaceTint,
     tertiary = BrandAccent,
     surface = SurfaceBase,
@@ -48,7 +51,9 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = BrandBodyText,
     outline = BorderDefault,
     outlineVariant = BorderSoft,
-    error = BrandDanger
+    error = BrandDanger,
+    background = SurfaceBase,
+    onBackground = BrandStrong
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),

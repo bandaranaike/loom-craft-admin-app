@@ -78,60 +78,126 @@ This document provides instructions for the Backend AI Agent to implement the AP
 ### Order Details
 - **Endpoint**: `GET /orders/{id}`
 - **Logic**:
-    - **Admin**: Full access to `order_addresses`, `payments`, `shipments`, and all `order_items`.
+    - **Admin**: Return full mobile-facing order detail data for all order items.
     - **Vendor**: 
         - Show **only** `order_items` belonging to them.
-        - **HIDE** `order_addresses`, customer phone/email, and total order payment details.
+        - **HIDE** customer email and payment-level details that are not rendered in the vendor app.
         - Show `status`, `id`, and specific item details (name, quantity, price, product image).
-- **Order item media requirement**:
-    - Each returned order item should include enough product media data for the mobile app to render an image without making a separate product-media request.
-    - The backend should source this from the `product_media` table using `order_items.product_id`.
-    - Preferred fields per item:
-      ```json
+- **Current API issue to fix**:
+    - The current API response includes backend-oriented fields the mobile order view does not use, for example:
+      - `subtotal`
+      - `commission_total`
+      - `shipping_responsibility`
+      - nested `customer.email`
+      - nested `payment`
+      - `shipments`
+    - These should be removed from the mobile order-detail response unless the app explicitly starts rendering them later.
+- **Required mobile format (Admin)**:
+  ```json
+  {
+    "id": 10,
+    "public_id": "ORD-VDQTOXTXEZL4DAU2NMLJEBYBHHCY",
+    "status": "delivered",
+    "currency": "LKR",
+    "total": 15840.00,
+    "created_at": "2026-03-31T12:06:23.000000Z",
+    "customer_name": "Ishara Dhanoji Karunadasa",
+    "items": [
       {
-        "id": 50,
-        "product_id": 77,
-        "product_name": "Handwoven Silk Scarf",
+        "id": 20,
+        "product_id": 25,
+        "product_name": "Wall Hanger - Ember Step Mosaic",
+        "product_code": "DR-WH-01009",
+        "vendor_id": 2,
+        "vendor_name": "Dumbara Rata",
         "quantity": 1,
-        "unit_price": 450.00,
+        "unit_price": 15840.00,
+        "line_total": 15840.00,
+        "status": "delivered",
         "currency": "LKR",
-        "image_url": "https://loomcraft.work/storage/products/scarf-main.jpg",
+        "image_url": "https://loomcraft.work/storage/products/wall-hanger-ember-step-mosaic.jpg",
         "product_media": [
           {
             "id": 301,
             "type": "image",
-            "path": "products/scarf-main.jpg",
-            "media_url": "https://loomcraft.work/storage/products/scarf-main.jpg",
-            "thumbnail_url": "https://loomcraft.work/storage/products/scarf-main-thumb.jpg",
-            "alt_text": "Handwoven Silk Scarf main image",
+            "path": "products/wall-hanger-ember-step-mosaic.jpg",
+            "media_url": "https://loomcraft.work/storage/products/wall-hanger-ember-step-mosaic.jpg",
+            "thumbnail_url": "https://loomcraft.work/storage/products/wall-hanger-ember-step-mosaic-thumb.jpg",
+            "alt_text": "Wall Hanger - Ember Step Mosaic",
             "sort_order": 0
           }
         ]
       }
-      ```
-    - `image_url` should be the primary display image for the ordered product.
-    - `product_media` should be sorted by `sort_order ASC`.
-    - All URLs returned to mobile should be fully qualified absolute URLs.
-    - If only one media field is feasible immediately, return `image_url`.
-- **Vendor Response Example**:
-  ```json
-  {
-    "id": 101,
-    "status": "processing",
-    "currency": "LKR",
-    "items": [
+    ],
+    "addresses": [
       {
-        "id": 50,
-        "product_id": 77,
-        "product_name": "Handwoven Silk Scarf",
-        "quantity": 1,
-        "unit_price": 450.00,
-        "status": "processing",
-        "image_url": "https://loomcraft.work/storage/products/scarf-main.jpg"
+        "type": "shipping",
+        "full_name": "Ishara Dhanoji Karunadasa",
+        "line1": "1/84",
+        "line2": "Weediyawaththa",
+        "city": "Kundasale",
+        "region": null,
+        "postal_code": "20168",
+        "country_code": "LK",
+        "phone": null
+      },
+      {
+        "type": "billing",
+        "full_name": "Ishara Dhanoji Karunadasa",
+        "line1": "1/84",
+        "line2": "Weediyawaththa",
+        "city": "Kundasale",
+        "region": null,
+        "postal_code": "20168",
+        "country_code": "LK",
+        "phone": null
       }
     ]
   }
   ```
+- **Required mobile format (Vendor)**:
+  ```json
+  {
+    "id": 10,
+    "public_id": "ORD-VDQTOXTXEZL4DAU2NMLJEBYBHHCY",
+    "status": "delivered",
+    "currency": "LKR",
+    "total": 15840.00,
+    "created_at": "2026-03-31T12:06:23.000000Z",
+    "items": [
+      {
+        "id": 20,
+        "product_id": 25,
+        "product_name": "Wall Hanger - Ember Step Mosaic",
+        "product_code": "DR-WH-01009",
+        "quantity": 1,
+        "unit_price": 15840.00,
+        "line_total": 15840.00,
+        "status": "delivered",
+        "currency": "LKR",
+        "image_url": "https://loomcraft.work/storage/products/wall-hanger-ember-step-mosaic.jpg",
+        "product_media": [
+          {
+            "id": 301,
+            "type": "image",
+            "path": "products/wall-hanger-ember-step-mosaic.jpg",
+            "media_url": "https://loomcraft.work/storage/products/wall-hanger-ember-step-mosaic.jpg",
+            "thumbnail_url": "https://loomcraft.work/storage/products/wall-hanger-ember-step-mosaic-thumb.jpg",
+            "alt_text": "Wall Hanger - Ember Step Mosaic",
+            "sort_order": 0
+          }
+        ]
+      }
+    ]
+  }
+  ```
+- **Field notes**:
+    - `created_at` should be used instead of `placed_at` so list and detail payloads stay consistent.
+    - `customer_name` should be flattened for the mobile client instead of nested under `customer`.
+    - `image_url` should be the primary full-size display image for the ordered product.
+    - `product_media` should be optional but, when present, sorted by `sort_order ASC`.
+    - All image URLs returned to mobile must be fully qualified absolute URLs.
+    - `country_code` should reflect the real country value. For the example above it likely should be `LK`, not `US`.
 
 ---
 

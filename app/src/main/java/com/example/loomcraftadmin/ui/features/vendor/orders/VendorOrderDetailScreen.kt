@@ -3,13 +3,13 @@ package com.example.loomcraftadmin.ui.features.vendor.orders
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -38,10 +38,16 @@ import com.example.loomcraftadmin.data.model.OrderDetail
 import com.example.loomcraftadmin.data.model.OrderItem
 import com.example.loomcraftadmin.ui.components.LoomCraftButton
 import com.example.loomcraftadmin.ui.components.LoomCraftCard
-import com.example.loomcraftadmin.ui.components.OrderItemThumbnail
-import com.example.loomcraftadmin.ui.components.StatusTag
+import com.example.loomcraftadmin.ui.components.OrderAmountPanel
+import com.example.loomcraftadmin.ui.components.OrderHeaderRow
+import com.example.loomcraftadmin.ui.components.OrderInfoChip
+import com.example.loomcraftadmin.ui.components.OrderItemHeroImage
+import com.example.loomcraftadmin.ui.components.OrderPageHeader
+import com.example.loomcraftadmin.ui.components.OrderSectionHeader
 import com.example.loomcraftadmin.ui.features.orders.viewmodel.OrderViewModel
 import com.example.loomcraftadmin.utils.CurrencyFormatter
+import com.example.loomcraftadmin.utils.OrderUiFormatter
+import com.example.loomcraftadmin.ui.components.orderStatusPalette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,14 +76,20 @@ fun VendorOrderDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Order Details") },
+                title = {
+                    Text(
+                        text = "Order View",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             if (isLoading) {
@@ -86,8 +98,8 @@ fun VendorOrderDetailScreen(
                 }
             } else {
                 orderDetail?.let { detail ->
-                    OrderDetailContent(
-                        detail,
+                    VendorOrderDetailContent(
+                        orderDetail = detail,
                         onUpdateStatus = { status -> viewModel.updateStatus(orderId, status) }
                     )
                 } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -99,43 +111,67 @@ fun VendorOrderDetailScreen(
 }
 
 @Composable
-fun OrderDetailContent(
+fun VendorOrderDetailContent(
     orderDetail: OrderDetail,
     onUpdateStatus: (String) -> Unit
 ) {
+    val palette = orderStatusPalette(orderDetail.status)
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                "Order #${orderDetail.id}",
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            StatusTag(status = orderDetail.status)
-        }
+            item {
+                OrderPageHeader(
+                    eyebrow = "Vendor",
+                    title = "Order View"
+                )
+            }
+            item {
+                LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        OrderHeaderRow(
+                            orderLabel = "Order #${orderDetail.id}",
+                            status = orderDetail.status
+                        )
+                        OrderAmountPanel(
+                            label = "Your total",
+                            amount = CurrencyFormatter.format(orderDetail.total, orderDetail.currency),
+                            amountColor = palette.amountColor
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OrderInfoChip(
+                                text = "${orderDetail.items.size} ${if (orderDetail.items.size == 1) "item" else "items"}",
+                                modifier = Modifier.weight(1f)
+                            )
+                            OrderInfoChip(
+                                text = OrderUiFormatter.formatTimestamp(orderDetail.createdAt),
+                                modifier = Modifier.weight(1.5f)
+                            )
+                        }
+                    }
+                }
+            }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            item {
+                OrderSectionHeader(
+                    eyebrow = "Fulfilment",
+                    title = "Order Items"
+                )
+            }
 
-        Text(
-            "Items",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LazyColumn(modifier = Modifier.weight(1f)) {
             items(orderDetail.items) { item ->
-                OrderItemCard(item)
-                Spacer(modifier = Modifier.height(12.dp))
+                VendorOrderItemCard(item)
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             "Update Status",
@@ -174,31 +210,42 @@ fun OrderDetailContent(
 }
 
 @Composable
-fun OrderItemCard(item: OrderItem) {
+fun VendorOrderItemCard(item: OrderItem) {
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OrderItemThumbnail(
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            OrderItemHeroImage(
                 imageUrl = item.displayImageUrl(),
                 contentDescription = item.productName
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+
+            Text(
+                text = item.productName,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    item.productName,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                    text = CurrencyFormatter.format(item.unitPrice, item.currency),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    "Qty: ${item.quantity} x ${CurrencyFormatter.format(item.unitPrice, item.currency)}",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = CurrencyFormatter.format(item.quantity * item.unitPrice, item.currency),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.ExtraBold
+                    )
                 )
             }
-            Text(
-                CurrencyFormatter.format(item.quantity * item.unitPrice, item.currency),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OrderInfoChip(text = "Qty ${item.quantity}")
+                OrderInfoChip(text = item.status.ifBlank { "Pending" })
+            }
         }
     }
 }
