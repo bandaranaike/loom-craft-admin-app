@@ -25,13 +25,19 @@ fun ShippingLabel(
     order: OrderDetail,
     modifier: Modifier = Modifier
 ) {
+    val inkColor = MaterialTheme.colorScheme.onSurface
+    val mutedInkColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val panelColor = MaterialTheme.colorScheme.surface
+    val dividerColor = MaterialTheme.colorScheme.outline
+    val softDividerColor = MaterialTheme.colorScheme.outlineVariant
+
     Card(
         modifier = modifier
             .width(400.dp)
             .wrapContentHeight(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(2.dp, Color.Black)
+        colors = CardDefaults.cardColors(containerColor = panelColor),
+        border = BorderStroke(2.dp, dividerColor)
     ) {
         Column(
             modifier = Modifier
@@ -49,61 +55,61 @@ fun ShippingLabel(
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 2.sp,
-                        color = Color.Black
+                        color = inkColor
                     )
                 )
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "ORDER ID",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
+                        color = mutedInkColor
                     )
                     Text(
                         text = "#${order.id}",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Black
+                        color = inkColor
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(thickness = 1.dp, color = Color.Black)
+            HorizontalDivider(thickness = 1.dp, color = dividerColor)
             Spacer(modifier = Modifier.height(16.dp))
 
             // Ship To Section
             Text(
                 text = "SHIP TO:",
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = Color.Black
+                color = inkColor
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = order.displayCustomerName() ?: "N/A",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = Color.Black
+                color = inkColor
             )
             Text(
                 text = order.displayCustomerAddress() ?: "No Address Provided",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Black,
+                color = inkColor,
                 lineHeight = 24.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Contact: ${order.displayCustomerPhone() ?: "N/A"}",
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = Color.Black
+                color = inkColor
             )
 
             Spacer(modifier = Modifier.height(20.dp))
-            HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
+            HorizontalDivider(thickness = 1.dp, color = softDividerColor)
             Spacer(modifier = Modifier.height(16.dp))
 
             // Items Summary
             Text(
                 text = "CONTENTS:",
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.Gray
+                color = mutedInkColor
             )
             order.items.forEach { item ->
                 Row(
@@ -113,7 +119,7 @@ fun ShippingLabel(
                     Text(
                         text = "${item.quantity}x ${item.productName}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black
+                        color = inkColor
                     )
                 }
             }
@@ -125,7 +131,7 @@ fun ShippingLabel(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp)
-                    .background(Color.Black.copy(alpha = 0.05f))
+                    .background(inkColor.copy(alpha = 0.05f))
                     .drawBehind {
                         // Simple barcode-like pattern
                         val barWidth = 4.dp.toPx()
@@ -134,7 +140,7 @@ fun ShippingLabel(
                         while (x < size.width) {
                             val w = if ((x / (barWidth + spacing)).toInt() % 3 == 0) barWidth * 2 else barWidth
                             drawRect(
-                                color = Color.Black,
+                                color = inkColor,
                                 topLeft = Offset(x, 0f),
                                 size = androidx.compose.ui.geometry.Size(w, size.height)
                             )
