@@ -1,6 +1,8 @@
 package com.example.loomcraftadmin.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,10 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,14 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.loomcraftadmin.ui.theme.AccentSoft
-import com.example.loomcraftadmin.ui.theme.BrandStrong
-import com.example.loomcraftadmin.ui.theme.LoomCraftAdminTheme
+import com.example.loomcraftadmin.ui.theme.BrandDanger
+import com.example.loomcraftadmin.ui.theme.BrandSuccess
+import com.example.loomcraftadmin.ui.theme.BrandWarning
 
 @Composable
 fun LoomCraftButton(
@@ -43,20 +42,23 @@ fun LoomCraftButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier
+            .height(50.dp)
+            .fillMaxWidth(),
         enabled = enabled,
-        shape = CircleShape, // Pill shaped
+        shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor
         ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+        contentPadding = PaddingValues(horizontal = 18.dp)
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge.copy(
+            style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                letterSpacing = 0.5.sp
             )
         )
     }
@@ -68,33 +70,16 @@ fun LoomCraftCard(
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
-    if (onClick != null) {
-        Card(
-            onClick = onClick,
-            modifier = modifier,
-            shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-        ) {
-            Box(modifier = Modifier.padding(16.dp)) {
-                content()
-            }
-        }
-    } else {
-        Card(
-            modifier = modifier,
-            shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-        ) {
-            Box(modifier = Modifier.padding(16.dp)) {
-                content()
-            }
-        }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(16.dp)
+    ) {
+        content()
     }
 }
 
@@ -103,100 +88,26 @@ fun StatusTag(
     status: String,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = when (status.lowercase()) {
-        "pending" -> AccentSoft
-        "paid" -> MaterialTheme.colorScheme.primary
-        "processing", "accepted" -> MaterialTheme.colorScheme.secondaryContainer
-        "rejected" -> MaterialTheme.colorScheme.errorContainer
-        "hand over to admin" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
-        "shipped" -> Color(0xFFE8F5E9)
-        "delivered" -> Color(0xFFC8E6C9)
-        "cancelled" -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val preferredTextColor = when (status.lowercase()) {
-        "pending" -> BrandStrong
-        "paid" -> MaterialTheme.colorScheme.onPrimary
-        "processing", "accepted" -> MaterialTheme.colorScheme.secondary
-        "rejected" -> MaterialTheme.colorScheme.error
-        "hand over to admin" -> MaterialTheme.colorScheme.tertiary
-        "shipped" -> Color(0xFF2E7D32)
-        "delivered" -> Color(0xFF1B5E20)
-        "cancelled" -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val textColor = if (backgroundColor.luminance() < 0.35f) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        preferredTextColor
+    val (backgroundColor, textColor) = when (status.lowercase()) {
+        "pending" -> BrandWarning.copy(alpha = 0.1f) to BrandWarning
+        "paid", "delivered", "shipped" -> BrandSuccess.copy(alpha = 0.1f) to BrandSuccess
+        "rejected", "cancelled" -> BrandDanger.copy(alpha = 0.1f) to BrandDanger
+        else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) to MaterialTheme.colorScheme.primary
     }
 
     Box(
         modifier = modifier
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(8.dp))
             .background(backgroundColor)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(
             text = status.uppercase(),
             style = MaterialTheme.typography.labelSmall.copy(
                 color = textColor,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 0.5.sp
             )
         )
-    }
-}
-
-@Preview(showBackground = true, name = "Light Theme")
-@Composable
-fun ComponentsPreview() {
-    LoomCraftAdminTheme(darkTheme = false) {
-        Surface(color = MaterialTheme.colorScheme.surface) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                LoomCraftButton(text = "Primary Button", onClick = {})
-                Spacer(modifier = Modifier.height(16.dp))
-                LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-                    Column {
-                        Text("Order #12345", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusTag(status = "Pending")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            StatusTag(status = "Processing")
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                StatusTag(status = "Hand over to admin")
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Dark Theme")
-@Composable
-fun ComponentsPreviewDark() {
-    LoomCraftAdminTheme(darkTheme = true) {
-        Surface(color = MaterialTheme.colorScheme.surface) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                LoomCraftButton(text = "Primary Button", onClick = {})
-                Spacer(modifier = Modifier.height(16.dp))
-                LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-                    Column {
-                        Text("Order #12345", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusTag(status = "Pending")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            StatusTag(status = "Processing")
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                StatusTag(status = "Hand over to admin")
-            }
-        }
     }
 }

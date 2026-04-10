@@ -42,7 +42,7 @@ fun PrintPreviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Print Preview", fontWeight = FontWeight.Bold) },
+                title = { Text("Print Preview", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -52,9 +52,14 @@ fun PrintPreviewScreen(
                     IconButton(onClick = { /* Share PDF */ }) {
                         Icon(Icons.Default.Share, contentDescription = "Share")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -84,15 +89,17 @@ fun PrintPreviewScreen(
                         .padding(horizontal = 32.dp)
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 
                 Text(
                     "Standard 4x6 inch label size",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                
+                Spacer(modifier = Modifier.height(32.dp))
             } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
     }

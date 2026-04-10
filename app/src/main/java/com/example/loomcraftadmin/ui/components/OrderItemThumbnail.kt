@@ -25,7 +25,7 @@ fun OrderItemThumbnail(
     contentDescription: String,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(12.dp)
     if (!imageUrl.isNullOrBlank()) {
         AsyncImage(
             model = imageUrl,
@@ -33,7 +33,7 @@ fun OrderItemThumbnail(
             modifier = modifier
                 .size(64.dp)
                 .clip(shape)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape),
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), shape),
             contentScale = ContentScale.Crop
         )
     } else {
@@ -41,14 +41,14 @@ fun OrderItemThumbnail(
             modifier = modifier
                 .size(64.dp)
                 .clip(shape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape),
+                .background(MaterialTheme.colorScheme.background)
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), shape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Image,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.outline
             )
         }
     }
@@ -60,32 +60,32 @@ fun OrderItemHeroImage(
     contentDescription: String,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(16.dp)
     if (!imageUrl.isNullOrBlank()) {
         AsyncImage(
             model = imageUrl,
             contentDescription = contentDescription,
             modifier = modifier
                 .fillMaxWidth()
-                .height(188.dp)
+                .height(280.dp)
                 .clip(shape)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape),
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), shape),
             contentScale = ContentScale.Crop
         )
     } else {
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .height(188.dp)
+                .height(280.dp)
                 .clip(shape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape),
+                .background(MaterialTheme.colorScheme.background)
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), shape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Image,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.outline
             )
         }
     }

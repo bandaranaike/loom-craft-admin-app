@@ -29,6 +29,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,13 +49,10 @@ import com.example.loomcraftadmin.ui.components.LoomCraftCard
 import com.example.loomcraftadmin.ui.components.OrderAmountPanel
 import com.example.loomcraftadmin.ui.components.OrderHeaderRow
 import com.example.loomcraftadmin.ui.components.OrderItemHeroImage
-import com.example.loomcraftadmin.ui.components.OrderInfoChip
 import com.example.loomcraftadmin.ui.components.OrderPageHeader
-import com.example.loomcraftadmin.ui.components.OrderSectionHeader
 import com.example.loomcraftadmin.ui.features.orders.viewmodel.OrderViewModel
 import com.example.loomcraftadmin.utils.CurrencyFormatter
 import com.example.loomcraftadmin.utils.OrderUiFormatter
-import com.example.loomcraftadmin.ui.components.orderStatusPalette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +85,7 @@ fun AdminOrderDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Order View",
+                        text = "Order Detail",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 },
@@ -124,14 +122,18 @@ fun AdminOrderDetailScreen(
                             }
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
+                )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             orderDetail?.let { order ->
@@ -139,15 +141,9 @@ fun AdminOrderDetailScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    item {
-                        OrderPageHeader(
-                            eyebrow = "Marketplace",
-                            title = "Order View"
-                        )
-                    }
                     item { AdminOrderDetailHeader(order) }
 
                     if (order.displayCustomerAddress() != null || order.displayCustomerPhone() != null) {
@@ -155,9 +151,12 @@ fun AdminOrderDetailScreen(
                     }
 
                     item {
-                        OrderSectionHeader(
-                            eyebrow = "Fulfilment",
-                            title = "Order Items"
+                        Text(
+                            text = "Order Items (${order.items.size})",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
                     }
 
@@ -193,7 +192,6 @@ fun AdminOrderDetailScreen(
 
 @Composable
 fun AdminOrderDetailHeader(order: OrderDetail) {
-    val palette = orderStatusPalette(order.status)
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             OrderHeaderRow(
@@ -201,30 +199,31 @@ fun AdminOrderDetailHeader(order: OrderDetail) {
                 status = order.status
             )
 
-            order.displayCustomerName()?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
-                )
-            }
-
-            OrderAmountPanel(
-                label = "Grand total",
-                amount = CurrencyFormatter.format(order.total, order.currency),
-                amountColor = palette.amountColor
-            )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
             ) {
-                OrderInfoChip(
-                    text = "${order.items.size} ${if (order.items.size == 1) "item" else "items"}",
-                    modifier = Modifier.weight(1f)
-                )
-                OrderInfoChip(
-                    text = OrderUiFormatter.formatTimestamp(order.createdAt),
-                    modifier = Modifier.weight(1.5f)
+                Column(modifier = Modifier.weight(0.85f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    order.displayCustomerName()?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+                    Text(
+                        text = OrderUiFormatter.formatTimestamp(order.createdAt),
+                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                }
+
+                OrderAmountPanel(
+                    label = "Total Amount",
+                    amount = CurrencyFormatter.format(order.total, order.currency),
+                    modifier = Modifier.weight(1.15f)
                 )
             }
         }
@@ -240,33 +239,48 @@ fun AdminOrderItemRow(item: OrderItem) {
                 contentDescription = item.productName
             )
 
-            Text(
-                text = item.productName,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    text = CurrencyFormatter.format(item.unitPrice, item.currency),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = CurrencyFormatter.format(item.quantity * item.unitPrice, item.currency),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.ExtraBold
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = item.productName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OrderInfoChip(text = "Qty ${item.quantity}")
-                OrderInfoChip(text = item.status.ifBlank { "Pending" })
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Qty ${item.quantity}",
+                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+                        Text(
+                            text = item.status.ifBlank { "Pending" },
+                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                }
+                
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = CurrencyFormatter.format(item.unitPrice, item.currency),
+                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                    Text(
+                        text = CurrencyFormatter.format(item.quantity * item.unitPrice, item.currency),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
         }
     }
@@ -275,26 +289,45 @@ fun AdminOrderItemRow(item: OrderItem) {
 @Composable
 fun ShippingAddressSection(order: OrderDetail) {
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            OrderSectionHeader(
-                eyebrow = "Dispatch",
-                title = "Shipping Details"
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Shipping Details",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
             )
-            order.displayCustomerName()?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
-                )
-            }
-            order.displayCustomerAddress()?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                order.displayCustomerName()?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                }
+                order.displayCustomerAddress()?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                }
             }
             order.displayCustomerPhone()?.let {
-                OrderInfoChip(text = "Contact $it")
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Contact",
+                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
         }
     }
@@ -302,28 +335,35 @@ fun ShippingAddressSection(order: OrderDetail) {
 
 @Composable
 fun SummarySection(order: OrderDetail) {
-    val palette = orderStatusPalette(order.status)
     LoomCraftCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            OrderSectionHeader(
-                eyebrow = "Finance",
-                title = "Order Summary"
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Order Summary",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Subtotal", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Subtotal",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                )
                 Text(
                     CurrencyFormatter.format(order.total, order.currency),
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
             }
-            HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
             OrderAmountPanel(
                 label = "Grand total",
-                amount = CurrencyFormatter.format(order.total, order.currency),
-                amountColor = palette.amountColor
+                amount = CurrencyFormatter.format(order.total, order.currency)
             )
         }
     }
