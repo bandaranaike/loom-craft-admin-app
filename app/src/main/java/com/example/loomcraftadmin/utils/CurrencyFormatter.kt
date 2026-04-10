@@ -5,26 +5,25 @@ import java.util.Currency
 import java.util.Locale
 
 object CurrencyFormatter {
-    fun format(amount: Double?, currencyCode: String = "INR"): String {
-        if (amount == null) return "—"
-        
+    fun format(amount: Double?, currencyCode: String = "LKR"): String {
+        if (amount == null) return "--"
+
         return try {
-            val format = NumberFormat.getCurrencyInstance(Locale("en", "IN")) // Default to India for INR
-            val currency = Currency.getInstance(currencyCode)
-            
-            // Adjust locale based on currency for better symbol placement
-            val locale = when (currencyCode.uppercase()) {
+            val normalizedCurrencyCode = currencyCode.ifBlank { "LKR" }.uppercase()
+            val currency = Currency.getInstance(normalizedCurrencyCode)
+            val locale = when (normalizedCurrencyCode) {
+                "LKR" -> Locale("en", "LK")
                 "USD" -> Locale.US
                 "EUR" -> Locale.FRANCE
                 "GBP" -> Locale.UK
-                else -> Locale("en", "IN")
+                else -> Locale("en", "LK")
             }
-            
-            val localizedFormat = NumberFormat.getCurrencyInstance(locale)
-            localizedFormat.currency = currency
-            localizedFormat.format(amount)
-        } catch (e: Exception) {
-            "$currencyCode ${String.format("%.2f", amount)}"
+
+            NumberFormat.getCurrencyInstance(locale).apply {
+                this.currency = currency
+            }.format(amount)
+        } catch (_: Exception) {
+            "${currencyCode.ifBlank { "LKR" }.uppercase()} ${String.format(Locale.US, "%.2f", amount)}"
         }
     }
 }

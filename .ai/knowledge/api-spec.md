@@ -82,19 +82,52 @@ This document provides instructions for the Backend AI Agent to implement the AP
     - **Vendor**: 
         - Show **only** `order_items` belonging to them.
         - **HIDE** `order_addresses`, customer phone/email, and total order payment details.
-        - Show `status`, `id`, and specific item details (name, quantity, price).
+        - Show `status`, `id`, and specific item details (name, quantity, price, product image).
+- **Order item media requirement**:
+    - Each returned order item should include enough product media data for the mobile app to render an image without making a separate product-media request.
+    - The backend should source this from the `product_media` table using `order_items.product_id`.
+    - Preferred fields per item:
+      ```json
+      {
+        "id": 50,
+        "product_id": 77,
+        "product_name": "Handwoven Silk Scarf",
+        "quantity": 1,
+        "unit_price": 450.00,
+        "currency": "LKR",
+        "image_url": "https://loomcraft.work/storage/products/scarf-main.jpg",
+        "product_media": [
+          {
+            "id": 301,
+            "type": "image",
+            "path": "products/scarf-main.jpg",
+            "media_url": "https://loomcraft.work/storage/products/scarf-main.jpg",
+            "thumbnail_url": "https://loomcraft.work/storage/products/scarf-main-thumb.jpg",
+            "alt_text": "Handwoven Silk Scarf main image",
+            "sort_order": 0
+          }
+        ]
+      }
+      ```
+    - `image_url` should be the primary display image for the ordered product.
+    - `product_media` should be sorted by `sort_order ASC`.
+    - All URLs returned to mobile should be fully qualified absolute URLs.
+    - If only one media field is feasible immediately, return `image_url`.
 - **Vendor Response Example**:
   ```json
   {
     "id": 101,
     "status": "processing",
+    "currency": "LKR",
     "items": [
       {
         "id": 50,
+        "product_id": 77,
         "product_name": "Handwoven Silk Scarf",
         "quantity": 1,
         "unit_price": 450.00,
-        "status": "processing"
+        "status": "processing",
+        "image_url": "https://loomcraft.work/storage/products/scarf-main.jpg"
       }
     ]
   }

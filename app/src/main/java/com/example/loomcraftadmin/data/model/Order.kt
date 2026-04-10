@@ -2,6 +2,30 @@ package com.example.loomcraftadmin.data.model
 
 import com.squareup.moshi.Json
 
+data class ProductMedia(
+    val id: Int = 0,
+    val type: String? = null,
+    val path: String? = null,
+    val url: String? = null,
+    @Json(name = "media_url") val mediaUrl: String? = null,
+    @Json(name = "thumbnail_url") val thumbnailUrl: String? = null,
+    @Json(name = "alt_text") val altText: String? = null,
+    @Json(name = "sort_order") val sortOrder: Int? = null
+) {
+    fun displayUrl(): String? {
+        return listOf(thumbnailUrl, mediaUrl, url, path)
+            .firstOrNull { !it.isNullOrBlank() }
+            ?.let { raw ->
+                when {
+                    raw.startsWith("http://", ignoreCase = true) -> raw
+                    raw.startsWith("https://", ignoreCase = true) -> raw
+                    raw.startsWith("/") -> "https://loomcraft.work$raw"
+                    else -> "https://loomcraft.work/storage/$raw"
+                }
+            }
+    }
+}
+
 data class OrderAddress(
     val id: Int = 0,
     val type: String? = null,
@@ -30,17 +54,27 @@ data class Order(
     @Json(name = "vendor_items_total") val vendorItemsTotal: Double? = null,
     @Json(name = "customer_name") val customerName: String? = null,
     val total: Double? = null,
-    val currency: String = "INR"
+    val currency: String = "LKR"
 )
 
 data class OrderItem(
     val id: Int,
+    @Json(name = "product_id") val productId: Int? = null,
     @Json(name = "product_name") val productName: String,
     val quantity: Int,
     @Json(name = "unit_price") val unitPrice: Double,
     val status: String = "",
-    val currency: String = "INR"
-)
+    val currency: String = "LKR",
+    @Json(name = "image_url") val imageUrl: String? = null,
+    @Json(name = "product_image_url") val productImageUrl: String? = null,
+    @Json(name = "product_media") val productMedia: List<ProductMedia> = emptyList()
+) {
+    fun displayImageUrl(): String? {
+        return listOf(imageUrl, productImageUrl)
+            .firstOrNull { !it.isNullOrBlank() }
+            ?: productMedia.firstNotNullOfOrNull { it.displayUrl() }
+    }
+}
 
 data class OrderDetail(
     val id: Int,
@@ -53,7 +87,7 @@ data class OrderDetail(
     @Json(name = "customer_phone") val customerPhone: String? = null,
     val total: Double? = null,
     @Json(name = "created_at") val createdAt: String? = null,
-    val currency: String = "INR"
+    val currency: String = "LKR"
 ) {
     private fun preferredAddress(): OrderAddress? {
         return addresses.firstOrNull { it.type.equals("shipping", ignoreCase = true) }

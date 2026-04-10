@@ -156,8 +156,20 @@ fun ShippingLabelPreview() {
                     id = 104,
                     status = "Accepted",
                     items = listOf(
-                        OrderItem(1, "Silk Scarf", 1, 450.0, "Accepted"),
-                        OrderItem(2, "Handloom Saree", 1, 1200.0, "Accepted")
+                        OrderItem(
+                            id = 1,
+                            productName = "Silk Scarf",
+                            quantity = 1,
+                            unitPrice = 450.0,
+                            status = "Accepted"
+                        ),
+                        OrderItem(
+                            id = 2,
+                            productName = "Handloom Saree",
+                            quantity = 1,
+                            unitPrice = 1200.0,
+                            status = "Accepted"
+                        )
                     ),
                     addresses = listOf(
                         OrderAddress(

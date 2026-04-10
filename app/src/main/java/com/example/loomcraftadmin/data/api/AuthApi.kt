@@ -1,6 +1,7 @@
 package com.example.loomcraftadmin.data.api
 
 import com.squareup.moshi.Json
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -24,7 +25,7 @@ data class UserDto(
 
 interface AuthApi {
     @POST("login")
-    suspend fun login(@Body request: LoginRequest): LoginResponse
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     @POST("notifications/register")
     suspend fun registerFcmToken(@Body request: FcmTokenRequest): retrofit2.Response<Unit>

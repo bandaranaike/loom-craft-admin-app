@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -93,7 +94,7 @@ fun StatusTag(
 ) {
     val backgroundColor = when (status.lowercase()) {
         "pending" -> AccentSoft
-        "paid" -> MaterialTheme.colorScheme.primaryContainer
+        "paid" -> MaterialTheme.colorScheme.primary
         "processing", "accepted" -> MaterialTheme.colorScheme.secondaryContainer
         "rejected" -> MaterialTheme.colorScheme.errorContainer
         "hand over to admin" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
@@ -103,9 +104,9 @@ fun StatusTag(
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
 
-    val textColor = when (status.lowercase()) {
+    val preferredTextColor = when (status.lowercase()) {
         "pending" -> BrandStrong
-        "paid" -> MaterialTheme.colorScheme.onPrimaryContainer
+        "paid" -> MaterialTheme.colorScheme.onPrimary
         "processing", "accepted" -> MaterialTheme.colorScheme.secondary
         "rejected" -> MaterialTheme.colorScheme.error
         "hand over to admin" -> MaterialTheme.colorScheme.tertiary
@@ -113,6 +114,11 @@ fun StatusTag(
         "delivered" -> Color(0xFF1B5E20)
         "cancelled" -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val textColor = if (backgroundColor.luminance() < 0.35f) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        preferredTextColor
     }
 
     Box(

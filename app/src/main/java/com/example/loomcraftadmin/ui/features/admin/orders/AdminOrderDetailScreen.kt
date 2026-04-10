@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -44,6 +45,7 @@ import com.example.loomcraftadmin.data.model.OrderDetail
 import com.example.loomcraftadmin.data.model.OrderItem
 import com.example.loomcraftadmin.ui.components.LoomCraftButton
 import com.example.loomcraftadmin.ui.components.LoomCraftCard
+import com.example.loomcraftadmin.ui.components.OrderItemThumbnail
 import com.example.loomcraftadmin.ui.components.StatusTag
 import com.example.loomcraftadmin.ui.features.orders.viewmodel.OrderViewModel
 import com.example.loomcraftadmin.utils.CurrencyFormatter
@@ -205,6 +207,11 @@ fun AdminOrderItemRow(item: OrderItem) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            OrderItemThumbnail(
+                imageUrl = item.displayImageUrl(),
+                contentDescription = item.productName
+            )
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.productName,
